@@ -6,7 +6,7 @@ import { IScan } from "../interfaces/scan.interface"
 import { scanModel } from "../models/scan.model"
 
 class ScanService {
-  async getScans(userId: string) {
+  async getScans(userId: string | null) {
     return await scanModel.find({ userId: userId }).sort({ createdAt: -1 })
   }
 
@@ -32,12 +32,8 @@ class ScanService {
         scanId,
       ])
 
-      python.stdout.on("data", (data) => {
-        console.log(`🟢 Output: ${data}`)
-      })
-
       python.stderr.on("data", (data) => {
-        console.error(`🔴 Error: ${data}`)
+        console.error(`Error: ${data}`)
       })
 
       python.on("close", (code) => {

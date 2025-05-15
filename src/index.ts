@@ -3,6 +3,8 @@ import connectDB from "./db/connection"
 import dotenv from "dotenv"
 import cors from "cors"
 
+import { clerkMiddleware } from "@clerk/express"
+
 import scanRoutes from "./routes/scan.routes"
 import vulnRoutes from "./routes/vulns.routes"
 
@@ -14,6 +16,8 @@ dotenv.config()
 
 app.use(express.urlencoded({ extended: true }))
 app.use(cors())
+
+app.use(clerkMiddleware())
 
 app.use(scanRoutes)
 app.use(vulnRoutes)
