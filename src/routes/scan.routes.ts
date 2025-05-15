@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express"
 
 import { scanService } from "../services/scan.service"
+import { vulnerabilityService } from "../services/vulnerability.service"
+
 import { IScan } from "src/interfaces/scan.interface"
 import { Types } from "mongoose"
 
@@ -30,21 +32,41 @@ router.get(`${prefix}/:userId/:scanId`, async (req: Request, res: Response) => {
 })
 
 router.post(`${prefix}/execute`, async (req: Request, res: Response) => {
-  const { userId, target } = req.body
+  try {
+    const { userId, target } = req.body
+    console.log(req.body)
 
-  const newScan = {
-    _id: new Types.ObjectId(),
-    userId: userId,
-    typeScan: "active",
-  } as IScan
+    if (!userId || !target) {
+      res.status(400).json({ error: "Missing userId or target" })
+    }
 
-  const executeScan = await scanService.executeScan(
-    userId,
-    newScan._id.toString(),
-    target
-  )
+    const newScan = {
+      _id: new Types.ObjectId(),
+      userId: userId,
+      typeScan: "active",
+    } as IScan
 
-  res.json({ message: "Scan executed" })
+    await scanService.createScan(newScan)
+    await scanService.executeScan(
+      userId,
+      newScan._id.toString(),
+      target
+    )
+    const outputData = await scanService.readOutputFile(
+      userId,
+      newScan._id.toString()
+    )
+    const readAndSaveVulns = await vulnerabilityService.readAndSaveVulns(
+      userId,
+      newScan._id.toString(),
+      outputData
+    )
+
+    res.json({ vulns: readAndSaveVulns })
+  } catch (error) {
+    console.error("Error executing scan:", error)
+    res.status(500).json({ error: "Failed to execute scan" })
+  }
 })
 
 export default router

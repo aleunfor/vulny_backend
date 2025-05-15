@@ -1,6 +1,7 @@
 import express from "express"
 import connectDB from "./db/connection"
 import dotenv from "dotenv"
+import cors from "cors"
 
 import scanRoutes from "./routes/scan.routes"
 import vulnRoutes from "./routes/vulns.routes"
@@ -8,10 +9,11 @@ import vulnRoutes from "./routes/vulns.routes"
 const app = express()
 const PORT = process.env.PORT || 3000
 
-express.json()
+app.use(express.json())
 dotenv.config()
 
 app.use(express.urlencoded({ extended: true }))
+app.use(cors())
 
 app.use(scanRoutes)
 app.use(vulnRoutes)
