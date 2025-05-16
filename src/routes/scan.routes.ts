@@ -22,11 +22,34 @@ router.get(`${prefix}`, requireAuth(), async (req: Request, res: Response) => {
 
     const scans = await scanService.getScans(userId)
     if (!scans.length) {
-      res.status(404).json({ error: "Scans not found" })
+      res.json({ scans: [] })
       return
     }
 
-    res.json({ scans: scans })
+    const scansWithVulns = await Promise.all(
+      scans.map(async (scan) => {
+        const vulns = await vulnerabilityService.getVulns(
+          String(userId),
+          String(scan._id)
+        )
+
+        return {
+          ...scan.toObject(),
+          vulns: vulns.map((vuln)=> {
+            return{
+              name: vuln.name,
+              description: vuln.description,
+              severity: vuln.severity,
+              mitigation: vuln.mitigation,
+              cwe: vuln.cwe,
+              createdAt: vuln.createdAt,
+            }
+          }),
+        }
+      })
+    )
+
+    res.json({ scans: scansWithVulns })
     return
   } catch (error) {
     console.error("Error fetching scans:", error)
@@ -55,7 +78,12 @@ router.get(
 
       const scan = await scanService.getScans(String(userId))
       if (!scan.length) {
-        res.status(404).json({ error: "Scan not found" })
+        const responseData = {
+          statistics: {},
+          vulns: [],
+          scanData: {},
+        }
+        res.json(responseData)
         return
       }
 
@@ -64,7 +92,47 @@ router.get(
         String(scan[0]._id)
       )
 
-      res.json({ vulns: vulnerabilties })
+      const countInfoVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        String(scan[0]._id),
+        "informational"
+      )
+      const countLowVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        String(scan[0]._id),
+        "low"
+      )
+      const countMedfiumVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        String(scan[0]._id),
+        "medium"
+      )
+      const countHighVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        String(scan[0]._id),
+        "high"
+      )
+
+      const responseData = {
+        statistics: {
+          informational: countInfoVulns,
+          low: countLowVulns,
+          medium: countMedfiumVulns,
+          high: countHighVulns,
+        },
+        vulns: vulnerabilties,
+        scanData: {
+          _id: scan[0]._id,
+          userId: scan[0].userId,
+          typeScan: scan[0].typeScan,
+          createdAt: scan[0].createdAt,
+          updatedAt: scan[0].updatedAt,
+          target: scan[0].target,
+        },
+      }
+
+      res.json(responseData)
+      return
     } catch (error) {
       console.error("Error fetching last scan:", error)
       res.status(500).json({ error: "Failed to fetch last scan" })
@@ -97,6 +165,7 @@ router.post(
         _id: new Types.ObjectId(),
         userId: userId,
         typeScan: "active",
+        target: target,
       } as IScan
 
       await scanService.createScan(newScan)
@@ -115,7 +184,47 @@ router.post(
         outputData
       )
 
-      res.json({ vulns: readAndSaveVulns })
+      const countInfoVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        newScan._id.toString(),
+        "informational"
+      )
+      const countLowVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        newScan._id.toString(),
+        "low"
+      )
+      const countMedfiumVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        newScan._id.toString(),
+        "medium"
+      )
+      const countHighVulns = await vulnerabilityService.countVulns(
+        String(userId),
+        newScan._id.toString(),
+        "high"
+      )
+
+      const responseData = {
+        statistics: {
+          informational: countInfoVulns,
+          low: countLowVulns,
+          medium: countMedfiumVulns,
+          high: countHighVulns,
+        },
+        vulns: readAndSaveVulns,
+        scanData: {
+          _id: newScan._id,
+          userId: newScan.userId,
+          typeScan: newScan.typeScan,
+          createdAt: newScan.createdAt,
+          updatedAt: newScan.updatedAt,
+          target: newScan.target,
+        },
+      }
+
+      res.json(responseData)
+      return
     } catch (error) {
       console.error("Error executing scan:", error)
       res.status(500).json({ error: "Failed to execute scan" })

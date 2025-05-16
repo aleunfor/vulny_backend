@@ -7,6 +7,7 @@ const scanSchema = new Schema(
   {
     userId: { type: String, required: true },
     typeScan: { type: String, required: true },
+    target: { type: String, required: true },
   },
   {
     timestamps: true,
