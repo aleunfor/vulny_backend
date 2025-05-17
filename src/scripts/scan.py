@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--target', required=True, help='Target URL to scan')
 parser.add_argument('--userid', required=True, help='User ID')
 parser.add_argument('--scanid', help='Scan ID')
+parser.add_argument('--env', help='Environment', default='dev')
 
 args = parser.parse_args()
 
@@ -21,7 +22,16 @@ output_dir = os.path.join(project_root, 'output')
 
 print(args.target, args.userid, args.scanid)
 
-command = [
+commandProd = [
+    'sudo', 'docker', 'run', '--rm',
+    '-v', f'{output_dir}:/zap/wrk',
+    'owasp/zap2docker-stable',
+    'zap-full-scan.py',
+    '-t', args.target,
+    '-J', f'{args.userid}-{args.scanid}-report.json'
+]
+
+commandDev = [
     'docker', 'run', '--rm',
     '-v', f'{output_dir}:/zap/wrk',
     'owasp/zap2docker-stable',
@@ -29,6 +39,8 @@ command = [
     '-t', args.target,
     '-J', f'{args.userid}-{args.scanid}-report.json'
 ]
+
+command = commandProd if args.env == 'production' else commandDev
 
 try:
     subprocess.run(command, check=True)

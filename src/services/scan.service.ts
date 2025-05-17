@@ -22,7 +22,7 @@ class ScanService {
   executeScan(userId: string, scanId: string, target: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const scriptPath = path.resolve(__dirname, "../scripts/scan.py")
-      const python = spawn("python", [
+      const python = spawn("python3", [
         scriptPath,
         "--target",
         target,
@@ -30,6 +30,8 @@ class ScanService {
         userId,
         "--scanid",
         scanId,
+        "--env",
+        process.env.NODE_ENV ? String(process.env.NODE_ENV) : "dev",
       ])
 
       python.stderr.on("data", (data) => {
