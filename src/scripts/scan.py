@@ -25,8 +25,8 @@ print(args.target, args.userid, args.scanid)
 commandProd = [
     'sudo', 'docker', 'run', '--rm',
     '-v', f'{output_dir}:/zap/wrk',
-    'owasp/zap2docker-stable',
-    'zap-full-scan.py',
+    'zaproxy/zap-stable',
+    'zap-baseline.py',
     '-t', args.target,
     '-J', f'{args.userid}-{args.scanid}-report.json'
 ]
@@ -34,8 +34,8 @@ commandProd = [
 commandDev = [
     'docker', 'run', '--rm',
     '-v', f'{output_dir}:/zap/wrk',
-    'owasp/zap2docker-stable',
-    'zap-full-scan.py',
+    'zaproxy/zap-stable',
+    'zap-baseline.py',
     '-t', args.target,
     '-J', f'{args.userid}-{args.scanid}-report.json'
 ]
