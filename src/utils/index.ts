@@ -12,3 +12,10 @@ export function returnSeverity(severityCode: string): string {
       return "N/A"
   }
 }
+
+export function isValidUrl(url: string): boolean {
+  const regex =
+    /^https?:\/\/([\w-]+\.)+([a-z]{2,})(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/i
+
+  return regex.test(url)
+}

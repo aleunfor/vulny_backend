@@ -47,13 +47,17 @@ class ScanService {
     })
   }
 
-  async readOutputFile(userId: string, scanId: string) {
-    const outputPath = path.resolve(
-      __dirname,
-      `../../output/${userId}-${scanId}-report.json`
-    )
-    const data = await fs.readFile(outputPath, "utf-8")
-    return JSON.parse(String(data))
+  async readOutputFile(userId: string, scanId: string): Promise<any> {
+    try {
+      const outputPath = path.resolve(
+        __dirname,
+        `../../output/${userId}-${scanId}-report.json`
+      )
+      const data = await fs.readFile(outputPath, "utf-8")
+      return JSON.parse(String(data))
+    } catch (error) {
+      return {}
+    }
   }
 }
 

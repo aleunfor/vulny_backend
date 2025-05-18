@@ -7,6 +7,8 @@ import { vulnerabilityService } from "../services/vulnerability.service"
 import { IScan } from "src/interfaces/scan.interface"
 import { Types } from "mongoose"
 
+import { isValidUrl } from "../utils"
+
 const router = Router()
 const prefix = "/api/scans"
 
@@ -35,8 +37,8 @@ router.get(`${prefix}`, requireAuth(), async (req: Request, res: Response) => {
 
         return {
           ...scan.toObject(),
-          vulns: vulns.map((vuln)=> {
-            return{
+          vulns: vulns.map((vuln) => {
+            return {
               name: vuln.name,
               description: vuln.description,
               severity: vuln.severity,
@@ -149,6 +151,12 @@ router.post(
       const { target } = req.body
       const { userId } = getAuth(req)
 
+      if (!isValidUrl(target)) {
+        console.error("Invalid URL format")
+        res.status(400).json({ error: "Invalid URL format" })
+        return
+      }
+
       if (!userId) {
         console.error("User ID not found in request")
         res.status(401).json({ message: "Unauthorized" })
@@ -178,6 +186,13 @@ router.post(
         String(userId),
         newScan._id.toString()
       )
+
+      if (!outputData) {
+        console.error("Output data not found")
+        res.status(500).json({ error: "Failed to fetch target." })
+        return
+      }
+
       const readAndSaveVulns = await vulnerabilityService.readAndSaveVulns(
         String(userId),
         newScan._id.toString(),
